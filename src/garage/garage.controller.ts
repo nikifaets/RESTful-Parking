@@ -1,4 +1,5 @@
-import { Controller, Delete, Get, Post, Param } from '@nestjs/common';
+import { Controller, Delete, Get, Post, Param, Body } from '@nestjs/common';
+import { CreateVehicleDTO } from './dto/create-vehicle.dto';
 
 
 @Controller('garage')
@@ -13,22 +14,22 @@ export class GarageController {
     @Get(':id')
     getCurrentPrice(@Param('id') id: number): number{
         
-        console.log("Request price for car with id #${id}");
+        console.log(`Request price for car with id ${id}`);
         return 1;
     }
 
     @Post()
-    addToParking(): string{
+    addToParking(@Body() createVehicleDTO: CreateVehicleDTO): string{
 
-        return "A car has been added.";
+        return `A car has been added with type ${createVehicleDTO.type}.`;
     }
 
-    @Delete()
-    removeFromParking(): number{
+    @Delete(':id')
+    removeFromParking(@Param('id') id: number): number{
 
         
         return 1;
     }
-    }
+}
 
 
