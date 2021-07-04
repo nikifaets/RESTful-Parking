@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { GarageModule } from './garage/garage.module';
+import { GarageModule } from './parking/parking.module';
 
 
 async function bootstrap() {

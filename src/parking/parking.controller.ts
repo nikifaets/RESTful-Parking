@@ -1,5 +1,5 @@
 import { Controller, Delete, Get, Post, Param, Body } from '@nestjs/common';
-import { CreateVehicleDTO } from './dto/create-vehicle.dto';
+import { CreateVehicleDTO } from '../vehicle/dto/create-vehicle.dto';
 
 
 @Controller('garage')
@@ -21,7 +21,7 @@ export class GarageController {
     @Post()
     addToParking(@Body() createVehicleDTO: CreateVehicleDTO): string{
 
-        return `A car has been added with type ${createVehicleDTO.type}.`;
+        return `A car has been added with type ${createVehicleDTO.category}.`;
     }
 
     @Delete(':id')

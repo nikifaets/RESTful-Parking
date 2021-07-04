@@ -1,6 +1,6 @@
 export class CreateVehicleDTO{
 
-    type: string;
+    category: string;
     premium: string;
     
 }
