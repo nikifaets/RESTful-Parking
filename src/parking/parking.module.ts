@@ -19,12 +19,11 @@ import configuration from '../../config/configuration';
     MongooseModule.forFeature([{name: Vehicle.name, schema: VehicleSchema}]),
     ConfigModule.forRoot({
       load: [configuration],
-      envFilePath: './config/.env',
-      isGlobal: true
+      envFilePath: './config/.env'
     })
     ],
   controllers: [ParkingController],
   providers: [ParkingService],
 })
-export class GarageModule {}
+export class ParkingModule {}
  

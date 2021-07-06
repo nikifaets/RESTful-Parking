@@ -4,6 +4,7 @@ import { Vehicle, VehicleDocument } from '../vehicle/schemas/vehicle.schema';
 import { CreateVehicleDTO } from '../vehicle/dto/create-vehicle.dto';
 import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 @Injectable()
 export class ParkingService {
@@ -16,22 +17,23 @@ export class ParkingService {
 
         const spotsPerCategory = await Promise.all(categories.map(async x => {
             const vehicleNum = await this.vehicleModel.countDocuments({category: x}).exec();
-            console.log(`vehicle num ${vehicleNum}`);
             return vehicleNum * this.configService.get(`${x}.requiredSpace`)}));
         
-        console.log(`spots ${spotsPerCategory}`);
         const res = spotsPerCategory.reduce((a: number, b: number) => a + b, 0);
         return Number(res);
-
 
     }
 
     async create(createVehicleDTO: CreateVehicleDTO): Promise<Vehicle> {
         
+        const freeSpots = await this.countFreeSpots();
+        if(freeSpots + this.configService.get(`${createVehicleDTO.category}.requiredSpace`) > this.configService.get(`availableSpots`)) {
+
+            throw new HttpException('Parking capacity is reached.', HttpStatus.BAD_REQUEST);
+        }
         const createdVehicle = new this.vehicleModel(createVehicleDTO);
         createdVehicle.enterDate = Date();
-        console.log(`New createdVehicle - ${createdVehicle}.`);
-        return createdVehicle.save(); 
+        return (await createdVehicle.save())._id; 
     }
 
     calculateDayComplement(hour: number, nightTariff: number, dayTariff: number): number {
@@ -57,9 +59,6 @@ export class ParkingService {
 
     async calculatePrice(id): Promise<number> {
 
-        console.log(`print service ${this.configService.get('A.nightTariff')}`);
-
-
         const millisecondsInDay = this.configService.get('millisecondsInDay');
 
         const vehicle = await this.vehicleModel.findOne({_id: id}).exec();
@@ -74,7 +73,6 @@ export class ParkingService {
         const dayLen = 24 - nightLen;
 
         const millisecondsDiff = Date.parse(currentDate.toUTCString()) - Date.parse(enterDate.toUTCString());
-        const fullDays = Math.floor(millisecondsDiff / millisecondsInDay) + 1;
         const pricePerFullDay = nightTariff * nightLen + dayTariff * dayLen;
 
         const enterHour = enterDate.getHours();
@@ -82,18 +80,21 @@ export class ParkingService {
 
         const firstDayComplement = this.calculateDayComplement(enterHour, nightTariff, dayTariff); // Holds the price from the hour of entering to 8am.
         const lastDayComplement = this.calculateDayComplement(exitHour, nightTariff, dayTariff); // Holds the price from the hour of exiting to 8am.
+        const fullDays = Math.floor(millisecondsDiff / millisecondsInDay) + firstDayComplement >= lastDayComplement ? 1 : 2;
 
-        console.log(` milliseconds diff ${millisecondsDiff}, enter date: ${enterDate}, enter hour: ${enterHour}, exit hour: ${exitHour} `);
-        console.log(` full days ${fullDays}, pricePerfullDay ${pricePerFullDay}, first day complement ${firstDayComplement}, last day comlement ${lastDayComplement}`);
-        return fullDays * pricePerFullDay - pricePerFullDay + firstDayComplement - lastDayComplement;
+        const discount = 1 - this.configService.get<number>(`${vehicle.premium}`);
+
+        return discount * (fullDays * pricePerFullDay - pricePerFullDay + firstDayComplement - lastDayComplement);
 
     } 
 
     async delete(id) {
-
+        
+        const price = await this.calculatePrice(id);
         await this.vehicleModel.deleteOne({_id: id});
         return {
-            message: `Successfuly deleted vehicle with id ${id}`
+            message: `Successfuly deleted vehicle with id ${id}.`,
+            price: (await price)
         };
         
     }

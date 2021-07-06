@@ -1,15 +1,14 @@
 import { ValidationPipe } from '@nestjs/common';
-import { IsIn } from 'class-validator';
-import { ConfigService } from '@nestjs/config'
+import { IsIn, IsNotEmpty } from 'class-validator';
 
 export class CreateVehicleDTO{
 
-    constructor(private configService: ConfigService) {}
-
     @IsIn(['A', 'B', 'C'])
+    @IsNotEmpty()
     category: string;
 
     @IsIn(['silver', 'gold', 'platinum', 'none'])
+    @IsNotEmpty()
     premium: string;
     
 }

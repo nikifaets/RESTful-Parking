@@ -23,15 +23,14 @@ export default () => ({
     discounts: ['silver', 'gold', 'platinum', 'none'],
 
     none: 0,
-    silver: 10,
-    gold: 15,
-    platinum: 20,
+    silver: .1,
+    gold: .15,
+    platinum: .2,
 
     dayStart: 8,
     nightStart: 18,
 
-    millisecondsInDay: 86400000
-
-    //MONGODB_URI: 'mongodb+srv://Lab08:u0OcqEUBZTXgBRa8@cluster0.83zms.mongodb.net/Lab08Garage?retryWrites=true&w=majority'
+    millisecondsInDay: 86400000,
+    availableSpots: 200
     
 });
