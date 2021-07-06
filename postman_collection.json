@@ -1,0 +1,227 @@
+{
+	"info": {
+		"_postman_id": "6eb989d7-505d-4b54-8a93-6725b49161eb",
+		"name": "Lab08 Parking",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get price for a non-existing vehicle.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": null
+			},
+			"response": []
+		},
+		{
+			"name": "Add new  vehicle.",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "category",
+							"value": "A",
+							"type": "text"
+						},
+						{
+							"key": "premium",
+							"value": "none",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/parking",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"parking"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add new vehicle.",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "category",
+							"value": "C",
+							"type": "text"
+						},
+						{
+							"key": "premium",
+							"value": "gold",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/parking",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"parking"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get price for an (old) vehicle.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": null
+			},
+			"response": []
+		},
+		{
+			"name": "Get price for vehicle.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/parking/60e4394723699ff28d3c7a0e",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"parking",
+						"60e4394723699ff28d3c7a0e"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete a vehicle.",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/parking/delete/60e432e8ca61416813977af3",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"parking",
+						"delete",
+						"60e432e8ca61416813977af3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete a non-existing vehicle.",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/parking/delete/60e432e8ca61416813977af3",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"parking",
+						"delete",
+						"60e432e8ca61416813977af3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add vehicle with invalid category.",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "category",
+							"value": "45",
+							"type": "text"
+						},
+						{
+							"key": "premium",
+							"value": "none",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/parking",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"parking"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add vehicle with invalid premium package.",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "category",
+							"value": "45",
+							"type": "text"
+						},
+						{
+							"key": "premium",
+							"value": "none",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/parking",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"parking"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Count available spots in the parking.",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": null
+			},
+			"response": []
+		}
+	]
+}
