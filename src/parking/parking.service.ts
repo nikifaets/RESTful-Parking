@@ -11,6 +11,16 @@ export class ParkingService {
 
     constructor(@InjectModel(Vehicle.name) private vehicleModel: Model<VehicleDocument>, private configService: ConfigService) {}
 
+    async findOne(id): Promise<Vehicle> {
+
+        const vehicle = await this.vehicleModel.findOne({_id: id}).exec();
+
+        if(!vehicle) {
+            throw new HttpException('Invalid vehicle ID.', HttpStatus.BAD_REQUEST);
+        }
+
+        return vehicle
+    }
     async countFreeSpots(): Promise<number> {
 
         const categories = this.configService.get('categories');
@@ -20,20 +30,21 @@ export class ParkingService {
             return vehicleNum * this.configService.get(`${x}.requiredSpace`)}));
         
         const res = spotsPerCategory.reduce((a: number, b: number) => a + b, 0);
-        return Number(res);
+        return this.configService.get('parkingCapacity') - Number(res);
 
     }
 
-    async create(createVehicleDTO: CreateVehicleDTO): Promise<Vehicle> {
+    async create(createVehicleDTO: CreateVehicleDTO): Promise<Object> {
         
         const freeSpots = await this.countFreeSpots();
-        if(freeSpots + this.configService.get(`${createVehicleDTO.category}.requiredSpace`) > this.configService.get(`availableSpots`)) {
 
-            throw new HttpException('Parking capacity is reached.', HttpStatus.BAD_REQUEST);
+        if(freeSpots + this.configService.get(`${createVehicleDTO.category}.requiredSpace`) > this.configService.get(`parkingCapacity`)) {
+            throw new HttpException('Parking capacity is reached.', HttpStatus.OK);
         }
+
         const createdVehicle = new this.vehicleModel(createVehicleDTO);
         createdVehicle.enterDate = Date();
-        return (await createdVehicle.save())._id; 
+        return {id: (await createdVehicle.save())._id}; 
     }
 
     calculateDayComplement(hour: number, nightTariff: number, dayTariff: number): number {
@@ -57,11 +68,11 @@ export class ParkingService {
         return res;
     }
 
-    async calculatePrice(id): Promise<number> {
+    async calculatePrice(id): Promise<Object> {
 
         const millisecondsInDay = this.configService.get('millisecondsInDay');
-
-        const vehicle = await this.vehicleModel.findOne({_id: id}).exec();
+ 
+        const vehicle = await this.findOne(id);
 
         const enterDate = new Date(vehicle.enterDate);
         const currentDate = new Date();
@@ -80,20 +91,22 @@ export class ParkingService {
 
         const firstDayComplement = this.calculateDayComplement(enterHour, nightTariff, dayTariff); // Holds the price from the hour of entering to 8am.
         const lastDayComplement = this.calculateDayComplement(exitHour, nightTariff, dayTariff); // Holds the price from the hour of exiting to 8am.
-        const fullDays = Math.floor(millisecondsDiff / millisecondsInDay) + firstDayComplement >= lastDayComplement ? 1 : 2;
+        const fullDays = Math.floor(millisecondsDiff / millisecondsInDay) + (firstDayComplement >= lastDayComplement ? 1 : 2);
 
         const discount = 1 - this.configService.get<number>(`${vehicle.premium}`);
 
-        return discount * (fullDays * pricePerFullDay - pricePerFullDay + firstDayComplement - lastDayComplement);
+        return {price: discount * (fullDays * pricePerFullDay - pricePerFullDay + firstDayComplement - lastDayComplement)};
 
     } 
 
     async delete(id) {
         
+        const vehicle = await this.findOne(id);
+
         const price = await this.calculatePrice(id);
-        await this.vehicleModel.deleteOne({_id: id});
+        this.vehicleModel.deleteOne({_id: id});
         return {
-            message: `Successfuly deleted vehicle with id ${id}.`,
+            message: `Successfully deleted vehicle with id ${id}.`,
             price: (await price)
         };
         

@@ -31,6 +31,6 @@ export default () => ({
     nightStart: 18,
 
     millisecondsInDay: 86400000,
-    availableSpots: 200
+    parkingCapacity: 200
     
 });

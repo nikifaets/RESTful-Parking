@@ -1,7 +1,6 @@
-import { Controller, Delete, Get, Post, Param, Body } from '@nestjs/common';
+import { Controller, Delete, Get, Post, Param, Body, Query } from '@nestjs/common';
 import { CreateVehicleDTO } from '../vehicle/dto/create-vehicle.dto';
 import { ParkingService } from './parking.service';
-import { Vehicle } from '../vehicle/schemas/vehicle.schema';
 
 @Controller('parking')
 export class ParkingController {
@@ -9,27 +8,24 @@ export class ParkingController {
     constructor(private parkingService: ParkingService) {}
 
     @Get()
-    async countFreeSpots(): Promise<number> {
-
+    async countFreeSpots(): Promise<Object> {
         const freeSpots = await this.parkingService.countFreeSpots();
-        console.log(`CONTROLLER RETURNED ${freeSpots}`);
-        return freeSpots;
+        return {freeSpots: freeSpots};
     }
 
-    @Get(':id')
-    getCurrentPrice(@Param('id') id: number): Promise<number> {
-        console.log(`Request price for car with id ${id}`);
-
+    @Get('getPrice')
+    getCurrentPrice(@Query('id') id: number): Promise<Object> {
         return this.parkingService.calculatePrice(id);  
     }
 
     @Post()
-    addToParking(@Body() createVehicleDTO: CreateVehicleDTO): Promise<Vehicle> {
+    addToParking(@Body() createVehicleDTO: CreateVehicleDTO): Promise<Object> {
         return this.parkingService.create(createVehicleDTO);
     }
 
-    @Delete('delete/:id')
-    removeFromParking(@Param('id') id) {
+    @Delete('delete/')
+    removeFromParking(@Query('id') id) {
         return this.parkingService.delete(id);
     }
+
 }
