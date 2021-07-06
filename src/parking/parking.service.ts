@@ -3,17 +3,27 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Vehicle, VehicleDocument } from '../vehicle/schemas/vehicle.schema';
 import { CreateVehicleDTO } from '../vehicle/dto/create-vehicle.dto';
 import { Model } from 'mongoose';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ParkingService {
-    constructor(@InjectModel(Vehicle.name) private vehicleModel: Model<VehicleDocument>) {}
+
+    constructor(@InjectModel(Vehicle.name) private vehicleModel: Model<VehicleDocument>, private configService: ConfigService) {}
 
     async countFreeSpots(): Promise<number> {
 
-        const vehiclesA = await this.vehicleModel.find({category: 'A'}).count().exec();
-        const vehiclesB = await this.vehicleModel.find({category: 'B'}).count().exec();
-        const vehiclesC = await this.vehicleModel.find({category: 'C'}).count().exec();
-        return vehiclesA + 2 * vehiclesB + 3 * vehiclesC;
+        const categories = this.configService.get('categories');
+
+        const spotsPerCategory = await Promise.all(categories.map(async x => {
+            const vehicleNum = await this.vehicleModel.countDocuments({category: x}).exec();
+            console.log(`vehicle num ${vehicleNum}`);
+            return vehicleNum * this.configService.get(`${x}.requiredSpace`)}));
+        
+        console.log(`spots ${spotsPerCategory}`);
+        const res = spotsPerCategory.reduce((a: number, b: number) => a + b, 0);
+        return Number(res);
+
+
     }
 
     async create(createVehicleDTO: CreateVehicleDTO): Promise<Vehicle> {
@@ -26,8 +36,8 @@ export class ParkingService {
 
     calculateDayComplement(hour: number, nightTariff: number, dayTariff: number): number {
 
-        const dayStart = 8;
-        const nightStart = 18;
+        const dayStart = this.configService.get('dayStart');
+        const nightStart = this.configService.get('nightStart');
 
         let res = 0;
         if(hour < 24 && hour >= nightStart) {
@@ -47,21 +57,23 @@ export class ParkingService {
 
     async calculatePrice(id): Promise<number> {
 
-        const dayTariff = 3;
-        const nightTariff = 2;
-        const dayStart = 8;
-        const nightStart = 18;
+        console.log(`print service ${this.configService.get('A.nightTariff')}`);
+
+
+        const millisecondsInDay = this.configService.get('millisecondsInDay');
+
+        const vehicle = await this.vehicleModel.findOne({_id: id}).exec();
+
+        const enterDate = new Date(vehicle.enterDate);
+        const currentDate = new Date();
+        const dayTariff = this.configService.get(`${vehicle.category}.dayTariff`);
+        const nightTariff = this.configService.get(`${vehicle.category}.nightTariff`);
+        const dayStart = this.configService.get('dayStart');
+        const nightStart = this.configService.get('nightStart');
         const nightLen = 24 - nightStart + dayStart;
         const dayLen = 24 - nightLen;
 
-        const millisecondsInDay = 1000 * 3600 * 24;
-
-        const vehicle = await this.vehicleModel.findOne({_id: id}).exec();
-        const enterDate = new Date(vehicle.enterDate);
-        const currentDate = new Date();
-
         const millisecondsDiff = Date.parse(currentDate.toUTCString()) - Date.parse(enterDate.toUTCString());
-        console.log(`current date millis: ${currentDate.getUTCMilliseconds()}, enter date millis: ${enterDate.getUTCMilliseconds()}`);
         const fullDays = Math.floor(millisecondsDiff / millisecondsInDay) + 1;
         const pricePerFullDay = nightTariff * nightLen + dayTariff * dayLen;
 
@@ -75,7 +87,8 @@ export class ParkingService {
         console.log(` full days ${fullDays}, pricePerfullDay ${pricePerFullDay}, first day complement ${firstDayComplement}, last day comlement ${lastDayComplement}`);
         return fullDays * pricePerFullDay - pricePerFullDay + firstDayComplement - lastDayComplement;
 
-    }   
+    } 
+
     async delete(id) {
 
         await this.vehicleModel.deleteOne({_id: id});

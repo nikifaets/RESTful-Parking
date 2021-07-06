@@ -3,11 +3,25 @@ import { ParkingController } from './parking.controller';
 import { ParkingService } from './parking.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Vehicle, VehicleSchema } from '../vehicle/schemas/vehicle.schema';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import configuration from '../../config/configuration';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb+srv://Lab08:securepwd@cluster0.83zms.mongodb.net/Lab08Garage?retryWrites=true&w=majority'),
-    MongooseModule.forFeature([{name: Vehicle.name, schema: VehicleSchema}])
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URI'),
+      }),
+      inject: [ConfigService],
+    }), 
+
+    MongooseModule.forFeature([{name: Vehicle.name, schema: VehicleSchema}]),
+    ConfigModule.forRoot({
+      load: [configuration],
+      envFilePath: './config/.env',
+      isGlobal: true
+    })
     ],
   controllers: [ParkingController],
   providers: [ParkingService],

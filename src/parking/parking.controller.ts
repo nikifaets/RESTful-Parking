@@ -9,16 +9,18 @@ export class ParkingController {
     constructor(private parkingService: ParkingService) {}
 
     @Get()
-    countFreeSpots(): Promise<number> {
+    async countFreeSpots(): Promise<number> {
 
-        return this.parkingService.countFreeSpots();
+        const freeSpots = await this.parkingService.countFreeSpots();
+        console.log(`CONTROLLER RETURNED ${freeSpots}`);
+        return freeSpots;
     }
 
     @Get(':id')
     getCurrentPrice(@Param('id') id: number): Promise<number> {
         console.log(`Request price for car with id ${id}`);
 
-        return this.parkingService.calculatePrice(id);
+        return this.parkingService.calculatePrice(id);  
     }
 
     @Post()
